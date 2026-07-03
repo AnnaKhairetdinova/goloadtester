@@ -1,0 +1,5 @@
+package goloadtester
+
+func main() {
+
+}
