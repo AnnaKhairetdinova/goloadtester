@@ -38,5 +38,5 @@ func main() {
 	fmt.Printf("n=%d, c=%d, timeout=%v\n", cfg.N, cfg.Concurrency, cfg.Timeout)
 
 	result := runner.Run(cfg)
-	fmt.Print(result[:11])
+	fmt.Print(result)
 }
