@@ -6,7 +6,9 @@ import (
 	"os"
 	"time"
 
+	"github.com/AnnaKhairetdinova/goloadtester/report"
 	"github.com/AnnaKhairetdinova/goloadtester/runner"
+	"github.com/AnnaKhairetdinova/goloadtester/stats"
 )
 
 func main() {
@@ -15,13 +17,6 @@ func main() {
 	c := flag.Int("c", 5, "Количество параллельных запросов")
 	timeout := flag.Duration("timeout", 10*time.Second, "Время запроса")
 	flag.Parse()
-
-	cfg := runner.Config{
-		URL:         *url,
-		N:           *n,
-		Concurrency: *c,
-		Timeout:     *timeout,
-	}
 
 	if *url == "" {
 		fmt.Println("Ошибка: флаг -url обязательный")
@@ -34,9 +29,15 @@ func main() {
 		*c = *n
 	}
 
-	fmt.Printf("URL: %s\n", cfg.URL)
-	fmt.Printf("n=%d, c=%d, timeout=%v\n", cfg.N, cfg.Concurrency, cfg.Timeout)
+	cfg := runner.Config{
+		URL:         *url,
+		N:           *n,
+		Concurrency: *c,
+		Timeout:     *timeout,
+	}
 
-	result := runner.Run(cfg)
-	fmt.Print(result)
+	res, td := runner.Run(cfg)
+	s := stats.Aggregate(res, td)
+
+	report.Print(cfg, s)
 }

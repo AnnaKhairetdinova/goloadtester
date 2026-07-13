@@ -3,6 +3,7 @@ package runner
 import (
 	"context"
 	"fmt"
+	"os"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -17,7 +18,7 @@ type Config struct {
 	Timeout     time.Duration
 }
 
-func Run(cfg Config) []worker.Result {
+func Run(cfg Config) ([]worker.Result, time.Duration) {
 	var done atomic.Int64
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -56,11 +57,13 @@ func Run(cfg Config) []worker.Result {
 	fmt.Println()
 
 	var workerResults []worker.Result
+	var totalDuration time.Duration
 	for res := range results {
 		workerResults = append(workerResults, res)
+		totalDuration += res.Duration
 	}
 
-	return workerResults
+	return workerResults, totalDuration
 }
 
 func showProgress(ctx context.Context, done *atomic.Int64, total int) {
@@ -72,10 +75,10 @@ func showProgress(ctx context.Context, done *atomic.Int64, total int) {
 		case <-ticker.C:
 			current := done.Load()
 			percent := float64(current) / float64(total) * 100
-			fmt.Printf("\rПрогресс: %d/%d (%.1f%%)  ", done, total, percent)
+			fmt.Fprintf(os.Stdout, "\rПрогресс: %d/%d (%.1f%%)  ", done, total, percent)
 
 		case <-ctx.Done():
-			fmt.Printf("\rПрогресс: %d/%d (100%%) - готово", total, total)
+			fmt.Fprintf(os.Stdout, "\rПрогресс: %d/%d (100%%) - готово\n", total, total)
 			return
 		}
 	}
