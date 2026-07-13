@@ -58,9 +58,9 @@ func Aggregate(results []worker.Result, totalDuration time.Duration) Stats {
 		return Latencies[i] < Latencies[j]
 	})
 
-	p50 = Latencies[0] //[(length*50)/100]
-	p90 = Latencies[1] //[(length*90)/100]
-	p99 = Latencies[2] //[(length*99)/100]
+	p50 = Latencies[(length*50)/100]
+	p90 = Latencies[(length*90)/100]
+	p99 = Latencies[(length*99)/100]
 
 	RPS := float64(length) / totalDuration.Seconds()
 	mean = mean / time.Duration(length)

@@ -44,7 +44,7 @@ func Print(cfg runner.Config, s stats.Stats) {
 	})
 
 	for _, p := range pairs {
-		if p.value != 0 {
+		if p.key != 0 {
 			percentP := float64(p.value) / float64(cfg.N) * 100
 			fmt.Fprintf(os.Stdout, "%d: %d (%.1f%%)\n", p.key, p.value, percentP)
 		}
