@@ -1,9 +1,12 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/AnnaKhairetdinova/goloadtester/report"
@@ -29,6 +32,9 @@ func main() {
 		*c = *n
 	}
 
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
 	cfg := runner.Config{
 		URL:         *url,
 		N:           *n,
@@ -36,8 +42,20 @@ func main() {
 		Timeout:     *timeout,
 	}
 
-	res, td := runner.Run(cfg)
-	s := stats.Aggregate(res, td)
+	start := time.Now()
+	res := runner.Run(ctx, cfg)
+	duration := time.Since(start)
+
+	if ctx.Err() != nil {
+		return
+	}
+
+	if len(res) == 0 {
+		fmt.Println("Нет данных")
+		os.Exit(1)
+	}
+
+	s := stats.Aggregate(res, duration)
 
 	report.Print(cfg, s)
 }

@@ -18,13 +18,13 @@ type Config struct {
 	Timeout     time.Duration
 }
 
-func Run(cfg Config) ([]worker.Result, time.Duration) {
+func Run(ctx context.Context, cfg Config) []worker.Result {
 	var done atomic.Int64
 
-	ctx, cancel := context.WithCancel(context.Background())
+	pgCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	go showProgress(ctx, &done, cfg.N)
+	go showProgress(pgCtx, &done, cfg.N)
 
 	jobs := make(chan struct{}, cfg.N)
 	for i := 0; i < cfg.N; i++ {
@@ -41,6 +41,12 @@ func Run(cfg Config) ([]worker.Result, time.Duration) {
 		go func() {
 			defer wg.Done()
 			for range jobs {
+				select {
+				case <-ctx.Done():
+					return
+				default:
+				}
+
 				result := worker.Do(cfg.URL, cfg.Timeout)
 				results <- result
 				done.Add(1)
@@ -50,20 +56,18 @@ func Run(cfg Config) ([]worker.Result, time.Duration) {
 
 	wg.Wait()
 	close(results)
-
 	cancel()
 
 	time.Sleep(50 * time.Millisecond)
 	fmt.Println()
 
 	var workerResults []worker.Result
-	var totalDuration time.Duration
+
 	for res := range results {
 		workerResults = append(workerResults, res)
-		totalDuration += res.Duration
 	}
 
-	return workerResults, totalDuration
+	return workerResults
 }
 
 func showProgress(ctx context.Context, done *atomic.Int64, total int) {

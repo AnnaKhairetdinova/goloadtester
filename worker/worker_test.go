@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func testDo(t *testing.T) {
+func TestDo(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("OK"))
